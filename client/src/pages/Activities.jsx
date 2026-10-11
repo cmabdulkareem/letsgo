@@ -18,7 +18,10 @@ const SORTS = [
 function useCategories() {
   return useQuery({
     queryKey: ['categories'],
-    queryFn: async () => (await api.get('/categories')).data.data,
+    queryFn: async () => {
+      const res = (await api.get('/categories')).data.data;
+      return res?.categories || res || [];
+    },
     staleTime: 5 * 60_000,
   });
 }
@@ -150,7 +153,7 @@ export default function Activities() {
         >
           All
         </button>
-        {(categories || []).map((c) => (
+        {(Array.isArray(categories) ? categories : []).map((c) => (
           <button
             key={c._id}
             type="button"

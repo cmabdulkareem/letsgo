@@ -43,7 +43,10 @@ export default function Create() {
 
   const { data: categories } = useQuery({
     queryKey: ['categories'],
-    queryFn: async () => (await api.get('/categories')).data.data,
+    queryFn: async () => {
+      const res = (await api.get('/categories')).data.data;
+      return res?.categories || res || [];
+    },
     staleTime: 5 * 60_000,
   });
 
@@ -171,7 +174,7 @@ export default function Create() {
               <span className="label">Category</span>
               {errors.category && <p className="text-xs text-red-500 mb-2">{errors.category.message}</p>}
               <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-                {(categories || []).map((c) => (
+                {(Array.isArray(categories) ? categories : []).map((c) => (
                   <button
                     key={c._id}
                     type="button"

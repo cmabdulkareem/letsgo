@@ -15,7 +15,10 @@ import { Button, Skeleton } from '../components/ui';
 function useCategories() {
   return useQuery({
     queryKey: ['categories'],
-    queryFn: async () => (await api.get('/categories')).data.data,
+    queryFn: async () => {
+      const res = (await api.get('/categories')).data.data;
+      return res?.categories || res || [];
+    },
     staleTime: 5 * 60_000,
   });
 }
@@ -160,7 +163,7 @@ export default function Landing() {
       <section className="max-w-5xl mx-auto px-4 mt-12">
         <h2 className="text-lg font-extrabold text-ink">Popular categories</h2>
         <div className="mt-4 grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-3">
-          {(categories || []).slice(0, 9).map((c) => (
+          {(Array.isArray(categories) ? categories : []).slice(0, 9).map((c) => (
             <Link
               key={c._id}
               to={`/activities?category=${c.slug}`}
