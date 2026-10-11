@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: #08b981;
+  --color-navy: #10172a;
+  --c-bg: 248 250 252; /* #F8FAFC */
+  --c-surface: 255 255 255; /* #FFFFFF */
+  --c-text: 15 23 42; /* #0F172A */
+  --c-text-soft: 100 116 139; /* #64748B */
+  --c-border: 226 232 240; /* #E2E8F0 */
+}
+
+.dark {
+  --c-bg: 11 17 32; /* #0B1120 */
+  --c-surface: 16 23 42; /* #10172A */
+  --c-text: 226 232 240; /* #E2E8F0 */
+  --c-text-soft: 148 163 184; /* #94A3B8 */
+  --c-border: 30 41 59; /* #1E293B */
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-canvas text-ink font-sans antialiased;
+  font-family: 'Plus Jakarta Sans', Inter, system-ui, sans-serif;
+}
+
+.dark body {
+  @apply bg-navy text-slate-200;
+}
+
+@layer components {
+  .card {
+    @apply bg-surface rounded-card border border-border shadow-card;
+  }
+  .input {
+    @apply w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-ink placeholder:text-ink-soft/70 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary disabled:opacity-50;
+  }
+  .label {
+    @apply block text-sm font-semibold text-ink mb-1.5;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold;
+  }
+  .menu-item {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-ink-soft hover:bg-border/40 hover:text-ink transition-colors;
+  }
+}
+
+/* Desktop layout: center app column like a phone, with side nav */
+.app-shell {
+  min-height: 100dvh;
+}
+
+@media (min-width: 1024px) {
+  .app-shell {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Thin scrollbars for chat */
+.thin-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.thin-scroll::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 999px;
+}
+
+/* Leaflet dark mode adjustments */
+.dark .leaflet-tile {
+  filter: brightness(0.85) contrast(1.05);
+}
