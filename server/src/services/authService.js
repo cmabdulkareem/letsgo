@@ -22,10 +22,12 @@ const VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000;
 const RESET_TTL_MS = 60 * 60 * 1000;
 
 export function refreshCookieOptions() {
+  const sameSite = env.cookieSameSite === 'none' ? 'none' : env.cookieSameSite;
   return {
     httpOnly: true,
-    secure: env.isProduction,
-    sameSite: env.cookieSameSite === 'none' ? 'none' : env.cookieSameSite,
+    // SameSite=None requires Secure=true in all browsers.
+    secure: env.isProduction || sameSite === 'none',
+    sameSite,
     path: '/api/v1/auth',
     maxAge: env.refreshTokenExpiryDays * 24 * 60 * 60 * 1000,
   };
