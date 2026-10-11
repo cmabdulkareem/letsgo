@@ -41,56 +41,48 @@ export default function App() {
       <InstallPrompt />
       <Suspense fallback={<FullScreenLoader label="Opening…" />}>
         <Routes>
-          <Route
-            element={
-              <AppLayout>
-                <Suspense fallback={<FullScreenLoader />}>
-                  <Routes>
-                    {/* Public */}
-                    <Route path="/" element={<Landing />} />
-                    <Route path="/activities" element={<Activities />} />
-                    <Route path="/activities/:activityId" element={<ActivityDetail />} />
-                    <Route path="/u/:username" element={<UserProfile />} />
-                    <Route path="/communities" element={<Communities />} />
-                    <Route path="/communities/:communityId" element={<CommunityDetail />} />
-                    <Route path="/privacy" element={<Privacy />} />
-                    <Route path="/terms" element={<Terms />} />
-                    <Route path="/guidelines" element={<Guidelines />} />
+          <Route element={<AppLayout />}>
+            {/* Public */}
+            <Route path="/" element={<Landing />} />
+            <Route path="/activities" element={<Activities />} />
+            <Route path="/activities/:activityId" element={<ActivityDetail />} />
+            <Route path="/u/:username" element={<UserProfile />} />
+            <Route path="/communities" element={<Communities />} />
+            <Route path="/communities/:communityId" element={<CommunityDetail />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/guidelines" element={<Guidelines />} />
 
-                    {/* Auth */}
-                    <Route element={<PublicOnlyRoute />}>
-                      <Route path="/login" element={<Login />} />
-                      <Route path="/register" element={<Register />} />
-                    </Route>
-                    <Route path="/forgot-password" element={<ForgotPassword />} />
-                    <Route path="/reset-password" element={<ResetPassword />} />
-                    <Route path="/verify-email" element={<VerifyEmail />} />
+            {/* Auth */}
+            <Route element={<PublicOnlyRoute />}>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+            </Route>
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
 
-                    {/* Authenticated */}
-                    <Route element={<ProtectedRoute />}>
-                      <Route path="/home" element={<Home />} />
-                      <Route path="/explore" element={<Explore />} />
-                      <Route path="/create" element={<Create />} />
-                      <Route path="/rooms/:roomId" element={<Room />} />
-                      <Route path="/my-activity" element={<MyActivity />} />
-                      <Route path="/notifications" element={<Notifications />} />
-                      <Route path="/profile" element={<Profile />} />
-                      <Route path="/profile/edit" element={<ProfileEdit />} />
-                      <Route path="/settings" element={<Settings />} />
-                      <Route path="/saved" element={<Saved />} />
-                      <Route path="/blocked-users" element={<BlockedUsers />} />
-                    </Route>
+            {/* Authenticated */}
+            <Route element={<ProtectedRoute />}>
+              <Route path="/home" element={<Home />} />
+              <Route path="/explore" element={<Explore />} />
+              <Route path="/create" element={<Create />} />
+              <Route path="/rooms/:roomId" element={<Room />} />
+              <Route path="/my-activity" element={<MyActivity />} />
+              <Route path="/notifications" element={<Notifications />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/profile/edit" element={<ProfileEdit />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/saved" element={<Saved />} />
+              <Route path="/blocked-users" element={<BlockedUsers />} />
+            </Route>
 
-                    <Route element={<AdminRoute />}>
-                      <Route path="/admin" element={<Admin />} />
-                    </Route>
+            <Route element={<AdminRoute />}>
+              <Route path="/admin" element={<Admin />} />
+            </Route>
 
-                    <Route path="*" element={<Navigate to="/" replace />} />
-                  </Routes>
-                </Suspense>
-              </AppLayout>
-            }
-          />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Route>
         </Routes>
       </Suspense>
     </>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { NavLink, Link, useNavigate } from 'react-router-dom';
+import { NavLink, Link, useNavigate, Outlet } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   Home, Search, Plus, CalendarClock, User, Users, Bell, LogOut, Moon, Sun, Menu, X, Shield,
@@ -265,7 +265,9 @@ export default function AppLayout({ children }) {
       <DesktopNav />
       <div className="min-w-0 flex flex-col min-h-screen">
         <AppHeader />
-        <main className="flex-1 w-full max-w-5xl mx-auto px-4 py-4 pb-24 lg:pb-8">{children}</main>
+        <main className="flex-1 w-full max-w-5xl mx-auto px-4 py-4 pb-24 lg:pb-8">
+          {children || <Outlet />}
+        </main>
       </div>
       <MobileBottomNav />
     </div>
