@@ -24,26 +24,33 @@ export function createApp() {
 
   app.use(helmet());
 
+  // Trusted origin patterns — auto-allow Vercel preview/prod and Render deployments
+  // so no env-var configuration is needed for standard hosting.
+  const TRUSTED_PATTERNS = [
+    /^https:\/\/[\w-]+\.vercel\.app$/,   // *.vercel.app
+    /^https:\/\/[\w-]+\.onrender\.com$/, // *.onrender.com
+  ];
+
   const corsOptions = {
     origin(origin, callback) {
-      // Allow server-to-server / curl requests (no Origin header).
+      // Allow server-to-server / curl (no Origin header).
       if (!origin) return callback(null, true);
+      // Explicit allowlist from env vars.
       if (env.allowedOrigins.includes(origin)) return callback(null, true);
-      // In development, log the blocked origin to help with misconfiguration.
+      // Pattern-based trust for Vercel and Render hostnames.
+      if (TRUSTED_PATTERNS.some((re) => re.test(origin))) return callback(null, true);
       if (!env.isProduction) {
-        console.warn(`[CORS] Blocked origin: ${origin}. Allowed: ${env.allowedOrigins.join(', ')}`);
+        console.warn(`[CORS] Blocked: ${origin} | Allowed: ${env.allowedOrigins.join(', ')}`);
       }
       return callback(new Error(`CORS: origin "${origin}" is not allowed`));
     },
     credentials: true,
-    // Explicitly list the headers the client is allowed to send.
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
     exposedHeaders: ['X-RateLimit-Limit', 'X-RateLimit-Remaining'],
-    // Cache preflight for 2 hours.
     maxAge: 7200,
   };
 
-  // Handle OPTIONS preflight for every route before any other middleware.
+  // Respond to OPTIONS preflight before any other middleware touches the request.
   app.options('*', cors(corsOptions));
   app.use(cors(corsOptions));
   app.use(compression());
