@@ -1,6 +1,17 @@
 import axios from 'axios';
 
-const baseURL = import.meta.env.VITE_API_URL || '/api/v1';
+// Normalize: if VITE_API_URL is a bare domain (e.g. https://letsgo.onrender.com)
+// without the /api/v1 path, append it automatically.
+function resolveBaseURL() {
+  const raw = import.meta.env.VITE_API_URL || '';
+  if (!raw) return '/api/v1'; // local dev — Vite proxy handles it
+  const clean = raw.replace(/\/$/, ''); // strip trailing slash
+  if (clean.endsWith('/api/v1')) return clean;
+  return `${clean}/api/v1`;
+}
+
+const baseURL = resolveBaseURL();
+
 
 export const api = axios.create({
   baseURL,
