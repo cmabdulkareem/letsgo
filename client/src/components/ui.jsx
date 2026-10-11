@@ -1,3 +1,4 @@
+import { forwardRef } from 'react';
 import { Loader2, Inbox } from 'lucide-react';
 
 const VARIANTS = {
@@ -23,37 +24,37 @@ export function Button({ variant = 'primary', size = 'md', loading = false, clas
   );
 }
 
-export function Input({ label, error, className = '', ...props }) {
+export const Input = forwardRef(function Input({ label, error, className = '', ...props }, ref) {
   return (
     <div className={className}>
       {label && <label className="label">{label}</label>}
-      <input className={`input ${error ? 'border-red-400 ring-red-200' : ''}`} {...props} />
-      {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+      <input ref={ref} className={`input ${error ? 'border-red-400 ring-2 ring-red-500/20' : ''}`} {...props} />
+      {error && <p className="mt-1 text-xs text-red-500 font-medium">{error}</p>}
     </div>
   );
-}
+});
 
-export function Textarea({ label, error, className = '', ...props }) {
+export const Textarea = forwardRef(function Textarea({ label, error, className = '', ...props }, ref) {
   return (
     <div className={className}>
       {label && <label className="label">{label}</label>}
-      <textarea className={`input min-h-[100px] resize-y ${error ? 'border-red-400' : ''}`} {...props} />
-      {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+      <textarea ref={ref} className={`input min-h-[100px] resize-y ${error ? 'border-red-400 ring-2 ring-red-500/20' : ''}`} {...props} />
+      {error && <p className="mt-1 text-xs text-red-500 font-medium">{error}</p>}
     </div>
   );
-}
+});
 
-export function Select({ label, error, children, className = '', ...props }) {
+export const Select = forwardRef(function Select({ label, error, children, className = '', ...props }, ref) {
   return (
     <div className={className}>
       {label && <label className="label">{label}</label>}
-      <select className="input" {...props}>
+      <select ref={ref} className={`input ${error ? 'border-red-400 ring-2 ring-red-500/20' : ''}`} {...props}>
         {children}
       </select>
-      {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+      {error && <p className="mt-1 text-xs text-red-500 font-medium">{error}</p>}
     </div>
   );
-}
+});
 
 export function Chip({ color = '#08B981', children, className = '' }) {
   return (
