@@ -13,7 +13,11 @@ export function ToastProvider({ children }) {
     setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 4000);
   }, []);
 
+  const showToast = useCallback((message, type = 'info') => push(message, type), [push]);
+
   const value = {
+    showToast,
+    push,
     success: (m) => push(m, 'success'),
     error: (m) => push(m, 'error'),
     info: (m) => push(m, 'info'),

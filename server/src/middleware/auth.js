@@ -2,6 +2,7 @@ import { User } from '../models/index.js';
 import { verifyAccessToken } from '../utils/tokens.js';
 import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../utils/asyncHandler.js';
+import env from '../config/env.js';
 
 export const authenticate = asyncHandler(async (req, _res, next) => {
   const header = req.headers.authorization || '';
@@ -39,7 +40,10 @@ export const optionalAuth = asyncHandler(async (req, _res, next) => {
 });
 
 export const requireVerifiedEmail = (req, _res, next) => {
-  if (!req.user?.verificationStatus?.emailVerified) {
+  if (
+    !req.user?.verificationStatus?.emailVerified &&
+    (env.isProduction || env.isTest)
+  ) {
     return next(ApiError.forbidden('Please verify your email address to continue'));
   }
   next();
