@@ -39,10 +39,20 @@ const env = {
   uploadMaxMb: int(process.env.UPLOAD_MAX_MB, 5),
   mapsApiKey: process.env.MAPS_API_KEY || '',
 
-  allowedOrigins: (process.env.ALLOWED_ORIGINS || process.env.CLIENT_ORIGIN || 'http://localhost:5173')
-    .split(',')
-    .map((o) => o.trim())
-    .filter(Boolean),
+  allowedOrigins: (() => {
+    const raw = process.env.ALLOWED_ORIGINS || process.env.CLIENT_ORIGIN || '';
+    const list = raw
+      .split(',')
+      .map((o) => o.trim().replace(/\/$/, '')) // strip trailing slashes
+      .filter(Boolean);
+    // Always allow local dev client so localhost is never accidentally blocked.
+    if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
+      if (!list.includes('http://localhost:5173')) list.push('http://localhost:5173');
+      if (!list.includes('http://127.0.0.1:5173')) list.push('http://127.0.0.1:5173');
+    }
+    // Fallback: if nothing configured, allow localhost only.
+    return list.length ? list : ['http://localhost:5173'];
+  })(),
   cookieSameSite: process.env.COOKIE_SAMESITE || 'lax',
 
   messageRetentionDays: int(process.env.MESSAGE_RETENTION_DAYS, 90),

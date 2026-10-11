@@ -23,16 +23,29 @@ export function createApp() {
   app.set('trust proxy', 1);
 
   app.use(helmet());
-  app.use(
-    cors({
-      origin(origin, callback) {
-        // Allow same-origin/non-browser requests; restrict cross-origin to allowlist.
-        if (!origin || env.allowedOrigins.includes(origin)) return callback(null, true);
-        return callback(new Error('Origin not allowed'));
-      },
-      credentials: true,
-    })
-  );
+
+  const corsOptions = {
+    origin(origin, callback) {
+      // Allow server-to-server / curl requests (no Origin header).
+      if (!origin) return callback(null, true);
+      if (env.allowedOrigins.includes(origin)) return callback(null, true);
+      // In development, log the blocked origin to help with misconfiguration.
+      if (!env.isProduction) {
+        console.warn(`[CORS] Blocked origin: ${origin}. Allowed: ${env.allowedOrigins.join(', ')}`);
+      }
+      return callback(new Error(`CORS: origin "${origin}" is not allowed`));
+    },
+    credentials: true,
+    // Explicitly list the headers the client is allowed to send.
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    exposedHeaders: ['X-RateLimit-Limit', 'X-RateLimit-Remaining'],
+    // Cache preflight for 2 hours.
+    maxAge: 7200,
+  };
+
+  // Handle OPTIONS preflight for every route before any other middleware.
+  app.options('*', cors(corsOptions));
+  app.use(cors(corsOptions));
   app.use(compression());
   app.use(express.json({ limit: '1mb' }));
   app.use(express.urlencoded({ extended: false, limit: '500kb' }));
