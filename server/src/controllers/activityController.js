@@ -114,3 +114,12 @@ export const memberAttendance = asyncHandler(async (req, res) => {
   );
   return ok(res, { membership }, 'Attendance updated');
 });
+
+export const invite = asyncHandler(async (req, res) => {
+  const result = await roomService.inviteUserToRoom(
+    req.params.activityId,
+    req.user,
+    req.body.identifier
+  );
+  return ok(res, result, result.message);
+});

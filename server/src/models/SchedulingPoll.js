@@ -5,7 +5,8 @@ const pollOptionSchema = new mongoose.Schema(
   {
     startAt: { type: Date, required: true },
     endAt: { type: Date, required: true },
-    label: { type: String, default: '', maxlength: 80 },
+    label: { type: String, default: '', maxlength: 120 },
+    venue: { type: String, default: '', maxlength: 120 },
     voteCount: { type: Number, default: 0 },
   },
   { timestamps: false }
@@ -14,6 +15,7 @@ const pollOptionSchema = new mongoose.Schema(
 const schedulingPollSchema = new mongoose.Schema(
   {
     room: { type: mongoose.Schema.Types.ObjectId, ref: 'ActivityRoom', required: true, index: true },
+    title: { type: String, default: 'When should we host this?', maxlength: 150 },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     options: { type: [pollOptionSchema], validate: (v) => Array.isArray(v) && v.length >= 1 && v.length <= 10 },
     votingMode: { type: String, enum: ['single', 'multiple'], default: 'single' },

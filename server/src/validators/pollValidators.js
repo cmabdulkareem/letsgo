@@ -2,12 +2,14 @@ import { z } from 'zod';
 
 export const createPollSchema = z
   .object({
+    title: z.string().trim().max(150).optional().default('When should we host this?'),
     options: z
       .array(
         z.object({
           startAt: z.coerce.date(),
           endAt: z.coerce.date(),
-          label: z.string().trim().max(80).optional().default(''),
+          label: z.string().trim().max(120).optional().default(''),
+          venue: z.string().trim().max(120).optional().default(''),
         })
       )
       .min(1, 'Add at least one time slot')

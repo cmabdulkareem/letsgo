@@ -29,6 +29,7 @@ const userSchema = new mongoose.Schema(
       match: /^[a-z0-9_]+$/,
     },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true, maxlength: 254 },
+    phone: { type: String, default: '', trim: true, maxlength: 20 },
     passwordHash: { type: String, required: true, select: false },
     avatar: { type: String, default: '' },
     bio: { type: String, default: '', maxlength: 300 },

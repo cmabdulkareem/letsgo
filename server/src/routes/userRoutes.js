@@ -13,6 +13,7 @@ router.patch('/me', authenticate, validate(updateProfileSchema), userController.
 router.post('/me/avatar', authenticate, upload.single('file'), userController.uploadAvatar);
 router.post('/me/deactivate', authenticate, userController.deactivate);
 router.get('/me/blocked', authenticate, userController.blocked);
+router.get('/search', authenticate, userController.search);
 
 router.get('/:username', optionalAuth, userController.getByUsername);
 router.post('/:userId/block', authenticate, userController.block);

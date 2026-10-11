@@ -10,6 +10,7 @@ import {
   hostAttendanceSchema,
   reviewRequestSchema,
   joinRequestSchema,
+  inviteSchema,
 } from '../validators/activityValidators.js';
 
 const router = Router();
@@ -22,6 +23,7 @@ router.patch('/:activityId', authenticate, requireVerifiedEmail, validate(update
 router.delete('/:activityId', authenticate, activityController.remove);
 router.post('/:activityId/join', authenticate, requireVerifiedEmail, activityController.join);
 router.post('/:activityId/leave', authenticate, activityController.leave);
+router.post('/:activityId/invite', authenticate, validate(inviteSchema), activityController.invite);
 router.post('/:activityId/join-requests', authenticate, requireVerifiedEmail, validate(joinRequestSchema), activityController.requestToJoin);
 router.get('/:activityId/join-requests', authenticate, activityController.joinRequests);
 router.patch('/:activityId/join-requests/:requestId', authenticate, validate(reviewRequestSchema), activityController.reviewJoinRequest);

@@ -1,6 +1,7 @@
+import mongoose from 'mongoose';
 import { User, Membership, ActivityRoom, CommunityMembership, Community, RefreshSession } from '../models/index.js';
 import ApiError from '../utils/ApiError.js';
-import { isBlockedEitherWay } from './safetyService.js';
+import { isBlockedEitherWay, blockedIdsFor } from './safetyService.js';
 import { parsePagination, paged } from '../utils/response.js';
 
 const EDITABLE_FIELDS = [
@@ -157,4 +158,34 @@ export async function deactivateAccount(user) {
   user.tokenVersion += 1;
   await user.save();
   await RefreshSession.updateMany({ user: user._id, revokedAt: null }, { $set: { revokedAt: new Date() } });
+}
+
+export async function searchUsers(q, viewer) {
+  if (!q || !q.trim()) return [];
+  const clean = q.trim();
+  const escaped = clean.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const rx = new RegExp(escaped, 'i');
+
+  const filter = {
+    accountStatus: 'active',
+    $or: [{ username: rx }, { displayName: rx }],
+  };
+
+  // If search query looks like digits or international phone, search phone too
+  if (/^[\d+\-\s()]{4,}$/.test(clean)) {
+    const digitsOnly = clean.replace(/\D/g, '');
+    filter.$or.push({ phone: new RegExp(escaped, 'i') });
+    if (digitsOnly.length >= 4) {
+      filter.$or.push({ phone: new RegExp(digitsOnly, 'i') });
+    }
+  }
+
+  if (viewer) {
+    const blocked = await blockedIdsFor(viewer._id);
+    if (blocked.length) filter._id = { $nin: blocked.map((id) => new mongoose.Types.ObjectId(id)) };
+  }
+
+  return User.find(filter)
+    .select('_id displayName username avatar phone city verificationStatus')
+    .limit(10);
 }

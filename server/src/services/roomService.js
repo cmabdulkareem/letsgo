@@ -698,3 +698,73 @@ export async function listJoinRequests(roomId, user, query) {
   ]);
   return paged(items, { page, limit, total });
 }
+
+export async function inviteUserToRoom(roomId, inviter, identifier) {
+  const room = await getRoomOr404(roomId);
+  const membership = await getMembership(roomId, inviter._id);
+  if (!membership || membership.membershipStatus !== 'active') {
+    throw ApiError.forbidden('Only room members can invite people');
+  }
+
+  const clean = identifier.trim();
+  const escaped = clean.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const rx = new RegExp(`^${escaped}$`, 'i');
+
+  const conditions = [
+    { username: rx },
+    { email: rx },
+    { displayName: rx },
+  ];
+
+  if (/^[\d+\-\s()]{4,}$/.test(clean)) {
+    const digitsOnly = clean.replace(/\D/g, '');
+    conditions.push({ phone: rx });
+    if (digitsOnly.length >= 4) {
+      conditions.push({ phone: new RegExp(digitsOnly, 'i') });
+    }
+  }
+
+  if (mongoose.isValidObjectId(clean)) {
+    conditions.push({ _id: clean });
+  }
+
+  const target = await User.findOne({
+    accountStatus: 'active',
+    $or: conditions,
+  });
+
+  if (!target) {
+    throw ApiError.notFound('No active user matched that username, phone number, or name');
+  }
+
+  if (String(target._id) === String(inviter._id)) {
+    throw ApiError.badRequest('You are already in this room');
+  }
+
+  await assertNotBlocked(inviter._id, target._id);
+
+  const existingMember = await getMembership(roomId, target._id);
+  if (existingMember && existingMember.membershipStatus === 'active') {
+    throw ApiError.conflict(`${target.displayName} is already a member of this room`);
+  }
+
+  // If open room and capacity available, add directly, or send an invitation notification with 1-click accept
+  await notify(target._id, {
+    type: 'room_invitation',
+    title: `${inviter.displayName} invited you to join "${room.title}"`,
+    body: `Tap to check out this ${room.title} group and start planning activities together.`,
+    relatedEntity: { kind: 'room', id: room._id },
+    url: `/rooms/${room._id}`,
+  }).catch(() => {});
+
+  return {
+    success: true,
+    user: {
+      _id: target._id,
+      displayName: target.displayName,
+      username: target.username,
+      avatar: target.avatar,
+    },
+    message: `Invitation sent to ${target.displayName}`,
+  };
+}

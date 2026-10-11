@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   CalendarClock, Check, ChevronLeft, CheckCircle2, CircleSlash, ListChecks, Send,
   Settings2, UserCheck, UserMinus, Users, X, XCircle, Phone, MoreVertical,
-  Smile, Plus, Mic, MapPin, Info, ArrowRight, ShieldCheck,
+  Smile, Plus, Mic, MapPin, Info, ArrowRight, ShieldCheck, UserPlus, Search,
 } from 'lucide-react';
 import { api, errorMessage } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
@@ -210,6 +210,7 @@ function SchedulePanel({ room, myMembership, canManage, onChanged }) {
   const { showToast } = useToast();
   const [selected, setSelected] = useState({});
   const [creating, setCreating] = useState(false);
+  const [pollTitle, setPollTitle] = useState('When should we host this?');
   const [draftSlots, setDraftSlots] = useState([]);
   const [votingMode, setVotingMode] = useState('single');
 
@@ -235,13 +236,20 @@ function SchedulePanel({ room, myMembership, canManage, onChanged }) {
   const createMutation = useMutation({
     mutationFn: async () =>
       api.post(`/activities/${room._id}/polls`, {
-        options: draftSlots.filter((s) => s.startAt).map((s) => ({ startAt: s.startAt, endAt: s.endAt || s.startAt, label: s.label })),
+        title: pollTitle.trim() || 'When should we host this?',
+        options: draftSlots.filter((s) => s.startAt).map((s) => ({
+          startAt: s.startAt,
+          endAt: s.endAt || s.startAt,
+          label: s.label,
+          venue: s.venue,
+        })),
         votingMode,
       }),
     onSuccess: () => {
       showToast('Poll created — members can vote now', 'success');
       setCreating(false);
       setDraftSlots([]);
+      setPollTitle('When should we host this?');
       polls.refetch();
       onChanged();
     },
@@ -306,48 +314,73 @@ function SchedulePanel({ room, myMembership, canManage, onChanged }) {
 
       {canManage && creating && (
         <Card className="p-4 space-y-3">
-          <h3 className="font-extrabold text-ink text-sm">Propose time slots</h3>
+          <h3 className="font-extrabold text-ink text-sm">Propose event options for the room</h3>
+          <div>
+            <label className="label">Poll title / Question</label>
+            <input
+              className="input"
+              placeholder="e.g. Which match date & turf suits everyone best?"
+              value={pollTitle}
+              onChange={(e) => setPollTitle(e.target.value)}
+            />
+          </div>
           {draftSlots.map((slot, i) => (
-            <div key={i} className="grid grid-cols-[1fr_1fr_auto] gap-2 items-end">
-              <div>
-                <label className="label">Starts</label>
-                <input
-                  type="datetime-local"
-                  className="input"
-                  value={slot.startAt}
-                  onChange={(e) =>
-                    setDraftSlots((s) => s.map((x, j) => (j === i ? { ...x, startAt: e.target.value } : x)))
-                  }
-                />
+            <div key={i} className="p-3 rounded-xl border border-border space-y-2 bg-surface">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-ink-soft">Option #{i + 1}</span>
+                <button
+                  type="button"
+                  aria-label="Remove slot"
+                  className="w-7 h-7 grid place-items-center rounded-full text-ink-soft hover:text-red-500"
+                  onClick={() => setDraftSlots((s) => s.filter((_, j) => j !== i))}
+                >
+                  <X size={15} />
+                </button>
               </div>
-              <div>
-                <label className="label">Label (optional)</label>
-                <input
-                  className="input"
-                  placeholder="e.g. Morning slot"
-                  value={slot.label}
-                  onChange={(e) =>
-                    setDraftSlots((s) => s.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))
-                  }
-                />
+              <div className="grid sm:grid-cols-3 gap-2">
+                <div>
+                  <label className="label text-[11px]">Date & Time</label>
+                  <input
+                    type="datetime-local"
+                    className="input !py-2 text-xs"
+                    value={slot.startAt}
+                    onChange={(e) =>
+                      setDraftSlots((s) => s.map((x, j) => (j === i ? { ...x, startAt: e.target.value } : x)))
+                    }
+                  />
+                </div>
+                <div>
+                  <label className="label text-[11px]">Label / Format (optional)</label>
+                  <input
+                    className="input !py-2 text-xs"
+                    placeholder="e.g. Sunday 7 AM Friendly"
+                    value={slot.label}
+                    onChange={(e) =>
+                      setDraftSlots((s) => s.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))
+                    }
+                  />
+                </div>
+                <div>
+                  <label className="label text-[11px]">Venue (optional)</label>
+                  <input
+                    className="input !py-2 text-xs"
+                    placeholder="e.g. Kasaragod Turf"
+                    value={slot.venue || ''}
+                    onChange={(e) =>
+                      setDraftSlots((s) => s.map((x, j) => (j === i ? { ...x, venue: e.target.value } : x)))
+                    }
+                  />
+                </div>
               </div>
-              <button
-                type="button"
-                aria-label="Remove slot"
-                className="w-10 h-10 grid place-items-center rounded-full text-ink-soft hover:text-red-500"
-                onClick={() => setDraftSlots((s) => s.filter((_, j) => j !== i))}
-              >
-                <X size={16} />
-              </button>
             </div>
           ))}
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setDraftSlots((s) => [...s, { startAt: '', endAt: '', label: '' }])}
+            onClick={() => setDraftSlots((s) => [...s, { startAt: '', endAt: '', label: '', venue: '' }])}
             disabled={draftSlots.length >= 10}
           >
-            + Add slot
+            + Add date/venue option
           </Button>
           <div className="grid grid-cols-2 gap-2">
             <label className="text-xs font-semibold text-ink-soft">
@@ -360,7 +393,7 @@ function SchedulePanel({ room, myMembership, canManage, onChanged }) {
           </div>
           <div className="flex gap-2">
             <Button size="sm" loading={createMutation.isPending} onClick={() => createMutation.mutate()}>
-              Create poll
+              Publish event poll
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setCreating(false)}>
               Cancel
@@ -373,7 +406,7 @@ function SchedulePanel({ room, myMembership, canManage, onChanged }) {
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <h3 className="font-extrabold text-ink text-sm flex items-center gap-2">
-              <ListChecks size={16} className="text-primary" /> Vote on the schedule
+              <ListChecks size={16} className="text-primary" /> {openPoll.title || 'Vote on the schedule'}
             </h3>
             {openPoll.deadline && <span className="text-xs text-ink-soft">closes {fromNow(openPoll.deadline)}</span>}
           </div>
@@ -403,6 +436,7 @@ function SchedulePanel({ room, myMembership, canManage, onChanged }) {
                     <span className="truncate">
                       {formatDateTime(o.startAt)}
                       {o.label && <span className="text-ink-soft font-normal"> · {o.label}</span>}
+                      {o.venue && <span className="text-primary font-normal"> 📍 {o.venue}</span>}
                     </span>
                   </span>
                   <span className="text-xs text-ink-soft shrink-0">{o.voteCount} votes</span>
@@ -479,10 +513,33 @@ function SchedulePanel({ room, myMembership, canManage, onChanged }) {
 
 function MembersPanel({ room, canManage, myUserId, onChanged }) {
   const { showToast } = useToast();
+  const [inviteQuery, setInviteQuery] = useState('');
+  const [showInviteBox, setShowInviteBox] = useState(false);
+
   const members = useQuery({
     queryKey: ['room-members', room._id],
     queryFn: async () => (await api.get(`/activities/${room._id}/members`, { params: { limit: 100 } })).data.data,
   });
+
+  const searchResults = useQuery({
+    queryKey: ['user-search', inviteQuery],
+    queryFn: async () => (await api.get('/users/search', { params: { q: inviteQuery } })).data.data.users,
+    enabled: inviteQuery.trim().length >= 2,
+    staleTime: 5000,
+  });
+
+  const inviteMutation = useMutation({
+    mutationFn: async (identifier) => api.post(`/activities/${room._id}/invite`, { identifier }),
+    onSuccess: (res) => {
+      showToast(res.data?.message || 'Invitation sent', 'success');
+      setInviteQuery('');
+      setShowInviteBox(false);
+      members.refetch();
+      onChanged();
+    },
+    onError: (err) => showToast(errorMessage(err, 'Failed to send invite'), 'error'),
+  });
+
   const requests = useQuery({
     queryKey: ['room-requests', room._id],
     queryFn: async () => (await api.get(`/activities/${room._id}/join-requests`)).data.data,
@@ -543,6 +600,87 @@ function MembersPanel({ room, canManage, myUserId, onChanged }) {
           </div>
         </Card>
       )}
+
+      {/* Invite Friends / Search by Username, Name or Phone */}
+      <Card className="p-4 bg-primary/5 border-primary/30">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-extrabold text-ink text-sm flex items-center gap-2">
+              <UserPlus size={16} className="text-primary" /> Invite People to Room
+            </h3>
+            <p className="text-xs text-ink-soft mt-0.5">
+              Invite by username, mobile number, or name.
+            </p>
+          </div>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => setShowInviteBox(!showInviteBox)}
+          >
+            {showInviteBox ? 'Close' : 'Invite'}
+          </Button>
+        </div>
+
+        {showInviteBox && (
+          <div className="mt-3 space-y-2 pt-3 border-t border-border">
+            <div className="relative">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft" />
+              <input
+                className="input !pl-9 !py-2 text-sm"
+                placeholder="Type username, phone, or name..."
+                value={inviteQuery}
+                onChange={(e) => setInviteQuery(e.target.value)}
+                autoFocus
+              />
+            </div>
+
+            {/* Direct identifier invite button */}
+            {inviteQuery.trim().length >= 3 && (
+              <div className="flex items-center justify-between p-2 rounded-xl bg-surface border border-border">
+                <span className="text-xs text-ink">
+                  Send invite directly to <strong className="text-primary">{inviteQuery.trim()}</strong>
+                </span>
+                <Button
+                  size="sm"
+                  loading={inviteMutation.isPending}
+                  onClick={() => inviteMutation.mutate(inviteQuery.trim())}
+                >
+                  Send Invite
+                </Button>
+              </div>
+            )}
+
+            {/* Live Search Suggestions */}
+            {searchResults.data && searchResults.data.length > 0 && (
+              <div className="space-y-1.5 mt-2">
+                <p className="text-[11px] font-bold text-ink-soft uppercase tracking-wide">Matching Users</p>
+                {searchResults.data.map((u) => (
+                  <div
+                    key={u._id}
+                    className="flex items-center justify-between p-2 rounded-xl bg-surface border border-border hover:border-primary/50 transition"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <UserAvatar user={u} size={32} />
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-ink truncate">{u.displayName}</p>
+                        <p className="text-[11px] text-ink-soft truncate">@{u.username} {u.phone ? `• ${u.phone}` : ''}</p>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      loading={inviteMutation.isPending}
+                      onClick={() => inviteMutation.mutate(u.username)}
+                    >
+                      Invite
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </Card>
 
       <Card className="p-4">
         <h3 className="font-extrabold text-ink text-sm flex items-center gap-2">

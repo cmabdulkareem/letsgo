@@ -140,8 +140,10 @@ export default function Create() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <h1 className="text-xl font-extrabold text-ink">Create an activity</h1>
-      <p className="text-sm text-ink-soft mt-0.5">You don&rsquo;t need a group yet — members will find you.</p>
+      <h1 className="text-xl font-extrabold text-ink">Create an activity or game room</h1>
+      <p className="text-sm text-ink-soft mt-0.5">
+        Set up the game or activity, invite friends or locals, then decide when and where to host it together.
+      </p>
 
       {/* Stepper */}
       <ol className="flex items-center gap-2 mt-5" aria-label="Progress">

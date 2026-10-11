@@ -15,6 +15,7 @@ export const NOTIFICATION_TYPES = [
   'activity_cancelled',
   'waitlist_promoted',
   'room_announcement',
+  'room_invitation',
   'moderation_action',
 ];
 

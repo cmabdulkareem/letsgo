@@ -80,3 +80,7 @@ export const reviewRequestSchema = z.object({
 export const joinRequestSchema = z.object({
   message: z.string().trim().max(300).optional().default(''),
 });
+
+export const inviteSchema = z.object({
+  identifier: z.string().trim().min(2, 'Enter a username, phone number, or name').max(100),
+});

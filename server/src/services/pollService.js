@@ -27,7 +27,7 @@ async function assertActiveMember(roomId, userId) {
   return membership;
 }
 
-export async function createPoll(roomId, user, { options, votingMode, deadline, allowVoteChange }) {
+export async function createPoll(roomId, user, { title, options, votingMode, deadline, allowVoteChange }) {
   const room = await getManagedRoom(roomId, user);
   if (['cancelled', 'archived', 'completed'].includes(room.roomStatus)) {
     throw ApiError.conflict('Scheduling is closed for this activity');
@@ -38,7 +38,8 @@ export async function createPoll(roomId, user, { options, votingMode, deadline, 
     .map((o) => ({
       startAt: new Date(o.startAt),
       endAt: new Date(o.endAt),
-      label: (o.label || '').slice(0, 80),
+      label: (o.label || '').slice(0, 120),
+      venue: (o.venue || '').slice(0, 120),
       voteCount: 0,
     }))
     .filter((o) => o.endAt > now && o.startAt < o.endAt);
@@ -52,6 +53,7 @@ export async function createPoll(roomId, user, { options, votingMode, deadline, 
 
   const poll = await SchedulingPoll.create({
     room: roomId,
+    title: (title || 'When should we host this?').slice(0, 150),
     createdBy: user._id,
     options: sanitized,
     votingMode,
@@ -172,6 +174,12 @@ export async function confirmPoll(pollId, user, optionId) {
   room.confirmedStartAt = option.startAt;
   room.confirmedEndAt = option.endAt;
   room.nextAt = option.startAt;
+  if (option.venue) {
+    room.location = {
+      ...(room.location?.toObject?.() || room.location || {}),
+      name: option.venue,
+    };
+  }
   if (['open', 'full', 'scheduling'].includes(room.roomStatus)) room.roomStatus = 'scheduled';
   await room.save();
 

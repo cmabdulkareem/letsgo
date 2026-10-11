@@ -57,3 +57,8 @@ export const report = asyncHandler(async (req, res) => {
   const report = await safetyService.createReport(req.user, req.body);
   return ok(res, { report }, 'Report submitted for review');
 });
+
+export const search = asyncHandler(async (req, res) => {
+  const users = await userService.searchUsers(req.query.q, req.user);
+  return ok(res, { users });
+});
